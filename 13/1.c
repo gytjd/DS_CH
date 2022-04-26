@@ -50,14 +50,13 @@ treePointer createBintree(treePointer root,char data)
         {
             root->leftChild=createBintree(root->leftChild, data);
         }
-        
-        else if(root->rightChild->leftChild==NULL || root->rightChild->rightChild==NULL)
+        else if(root->leftChild->leftChild!=NULL && root->leftChild->rightChild!=NULL && root->rightChild->leftChild!=NULL && root->rightChild->rightChild!=NULL)
         {
-            root->rightChild=createBintree(root->rightChild, data);
+            root->leftChild=createBintree(root->leftChild, data);
         }
         else
         {
-            root->leftChild=createBintree(root->leftChild, data);
+            root->rightChild=createBintree(root->rightChild, data);
         }
     }
     
@@ -97,15 +96,23 @@ void postorder_my(treePointer root)
 int main()
 {
     int i;
-    for(i=0;i<5;i++)
+    for(i=0;i<7;i++)
     {
         root=createBintree(root, 'A'+i);
     }
     
+    printf("creating a binary tree\n");
+    
+    printf("\nthree binary tree traversals\n");
+    printf("inorder traversal   : ");
     inorder(root);
     printf("\n");
+    
+    printf("preorder traversal  : ");
     preorder_my(root);
     printf("\n");
+    
+    printf("postorder traversal : ");
     postorder_my(root);
     printf("\n");
     return 0;
