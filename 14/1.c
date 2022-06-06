@@ -1,27 +1,22 @@
-//
-//  1.c
-//  KNU C
-//
-//  Created by hwang hyosung on 2022/04/28.
-//
-
-#include "1.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_STACK_SIZE 100
-
-typedef struct node *treePointer;
-typedef struct node {
+typedef struct treeNode {
     char data;
-    treePointer leftChild;
-    treePointer rightChild;
-}node;
+    struct treeNode *leftChild;
+    struct treeNode *rightChild;
+}treeNode;
 
-treePointer root;
-treePointer stack[MAX_STACK_SIZE];
-int top=-1;
+typedef struct stackNode {
+    treeNode *data;
+    struct stackNode *link;
+}stackNode;
+
+typedef struct stackType {
+    stackNode *top;
+}stackType;
+
+treeNode *root=NULL;
 
 void error(char *message)
 {
@@ -29,133 +24,124 @@ void error(char *message)
     exit(1);
 }
 
-void init_stack(void)
+void init_stack(stackType *s)
 {
-    top=-1;
+    s->top=NULL;
 }
 
-int is_stack_empty(void)
+int is_stack_empty(stackType *s)
 {
-    return top==-1;
+    return s->top==NULL;
 }
 
-int is_stack_full(void)
+treeNode *create_node(char data,treeNode *left,treeNode *right)
 {
-    return top==MAX_STACK_SIZE-1;
-}
-
-void push(treePointer pNode)
-{
-    if(is_stack_full())
-    {
-        error("스택이 꽉차있습니다.");
-    }
-    else
-    {
-        stack[++top]=pNode;
-    }
-}
-
-treePointer pop(void)
-{
-    if(is_stack_empty())
-    {
-        error("스택이 비어있습니다.");
-    }
-    
-    return stack[top--];
-}
-
-treePointer create_node(char data,treePointer left,treePointer right)
-{
-    treePointer new_node=(treePointer)malloc(sizeof(node));
+    treeNode *new_node=(treeNode *)malloc(sizeof(treeNode));
     new_node->data=data;
     new_node->leftChild=left;
     new_node->rightChild=right;
+
     
     return new_node;
 }
 
-treePointer createBinTree(void)
+void push(stackType *s,treeNode *data)
 {
-    init_stack();
+    stackNode *new_node=(stackNode *)malloc(sizeof(stackNode));
+    new_node->data=data;
+    new_node->link=NULL;
     
-    char data;
-    
-    FILE *fa;
-    fa=fopen("input.txt", "r");
-    
-    treePointer op1,op2;
-    
-    while(fscanf(fa, "%c",&data)!=EOF)
+    if(is_stack_empty(s))
     {
-        printf("%c",data);
-        if(data=='+' || data=='-' || data=='*' || data=='/' || data=='%')
-        {
-            op2=pop();
-            op1=pop();
-            
-            push(create_node(data, op1, op2));
-        }
-        else
-        {
-            push(create_node(data,NULL,NULL));
-        }
+        s->top=new_node;
     }
-    
-    return pop();
-    
+    else
+    {
+        new_node->link=s->top;
+        s->top=new_node;;
+    }
 }
 
-void inorder_r(treePointer root)
+treeNode *pop(stackType *s)
+{
+    stackNode *removed=s->top;
+    treeNode *data=removed->data;
+    
+    s->top=removed->link;
+    
+    free(removed);
+    
+    return data;
+}
+
+void inorder_my(treeNode *root)
 {
     if(root)
     {
-        inorder_r(root->leftChild);
+        inorder_my(root->leftChild);
         printf("%c",root->data);
-        inorder_r(root->rightChild);
-        
+        inorder_my(root->rightChild);
     }
 }
 
-void preorder_r(treePointer root)
+void preorder_my(treeNode *root)
 {
     if(root)
     {
         printf("%c",root->data);
-        preorder_r(root->leftChild);
-        preorder_r(root->rightChild);
+        preorder_my(root->leftChild);
+        preorder_my(root->rightChild);
     }
 }
 
-void postorder_r(treePointer root)
+void postorder_my(treeNode *root)
 {
     if(root)
     {
-        postorder_r(root->leftChild);
-        postorder_r(root->rightChild);
+        postorder_my(root->leftChild);
+        postorder_my(root->rightChild);
         printf("%c",root->data);
     }
 }
 int main()
 {
-    printf("the length of input string should be less than 80\n");
-    printf("input string <postfix expression> : ");
-    root=createBinTree();
+    FILE *fa;
+    fa=fopen("input.txt","r");
     
-    printf("\ncreating its binary tree\n\n");
+    char data;
+    stackType s;
+    treeNode *op1,*op2;
+    init_stack(&s);
     
-    printf("inorder traversal   : ");
-    inorder_r(root);
-    printf("\n");
+    while(fscanf(fa, "%c",&data)!=EOF)
+    {
+        printf("%c",data);
+        
+        if(data=='+'||data=='-'||data=='*'||data=='/'||data=='%')
+        {
+            op2=pop(&s);
+            op1=pop(&s);
+            
+            push(&s, create_node(data, op1, op2));
+        }
+        else
+        {
+            push(&s, create_node(data, NULL, NULL));
+        }
+    }
     
-    printf("preorder traversal  : ");
-    preorder_r(root);
-    printf("\n");
+    root=pop(&s);
     
-    printf("postorder traversal : ");
-    postorder_r(root);
+    printf("\n\ninorder\n");
+    inorder_my(root);
+    
+    printf("\n\npreorder\n");
+    preorder_my(root);
+    
+    printf("\n\npostorder\n");
+    postorder_my(root);
     printf("\n");
     
     return 0;
+    
 }

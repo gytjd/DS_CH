@@ -1,37 +1,22 @@
-//
-//  2.c
-//  KNU C
-//
-//  Created by hwang hyosung on 2022/04/28.
-//
-
-#include "2.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#define MAX_SIZE 100
-
-typedef struct node* nodePointer;
-typedef struct node {
+typedef struct treeNode {
     char data;
-    nodePointer leftChild;
-    nodePointer rightChild;
-    int visited;
-}node;
+    struct treeNode *leftChild;
+    struct treeNode *rightChild;
+}treeNode;
 
-typedef struct queueType {
-    nodePointer queue[MAX_SIZE];
-    int front;
-    int rear;
-}queueType;
+typedef struct stackNode {
+    treeNode *data;
+    struct stackNode *link;
+}stackNode;
 
 typedef struct stackType {
-    nodePointer stack[MAX_SIZE];
-    int top;
+    stackNode *top;
 }stackType;
 
-nodePointer root=NULL;
+treeNode *root=NULL;
 
 void error(char *message)
 {
@@ -41,114 +26,116 @@ void error(char *message)
 
 void init_stack(stackType *s)
 {
-    s->top=-1;
+    s->top=NULL;
 }
 
 int is_stack_empty(stackType *s)
 {
-    return s->top==-1;
+    return s->top==NULL;
 }
 
-int is_stack_full(stackType *s)
+treeNode *create_node(char data,treeNode *left,treeNode *right)
 {
-    return s->top==MAX_SIZE-1;
+    treeNode *new_node=(treeNode *)malloc(sizeof(treeNode));
+    new_node->data=data;
+    new_node->leftChild=left;
+    new_node->rightChild=right;
+
+    
+    return new_node;
 }
 
-void push(stackType *s,nodePointer pNode)
+void push(stackType *s,treeNode *data)
 {
-    if(is_stack_full(s))
+    stackNode *new_node=(stackNode *)malloc(sizeof(stackNode));
+    new_node->data=data;
+    new_node->link=NULL;
+    
+    if(is_stack_empty(s))
     {
-        error("stack is full, cannot push element");
+        s->top=new_node;
     }
-    s->stack[++(s->top)]=pNode;
+    else
+    {
+        new_node->link=s->top;
+        s->top=new_node;;
+    }
 }
 
-nodePointer pop(stackType *s)
+treeNode *pop(stackType *s)
 {
     if(is_stack_empty(s))
     {
         return NULL;
     }
     
-    return s->stack[(s->top)--];
+    stackNode *removed=s->top;
+    treeNode *data=removed->data;
+    
+    s->top=removed->link;
+    
+    free(removed);
+    
+    return data;
 }
+
+typedef struct queueNode {
+    treeNode *data;
+    struct queueNode *link;
+}queueNode;
+
+typedef struct queueType {
+    queueNode *front;
+    queueNode *rear;
+}queueType;
 
 void init_queue(queueType *q)
 {
-    q->front=-1;
-    q->rear=-1;
+    q->front=NULL;
+    q->rear=NULL;
 }
 
 int is_queue_empty(queueType *q)
 {
-    return q->front==q->rear;
+    return (q->front==NULL && q->rear==NULL);
 }
 
-int is_queue_full(queueType *q)
+void enqueue(queueType *q,treeNode *data)
 {
-    return q->rear==MAX_SIZE-1;
-}
-
-void enqueue(queueType *q,nodePointer pNode)
-{
-    if(is_queue_full(q))
-    {
-        error("queue is full, cannot add element");
-    }
-    q->queue[++(q->rear)]=pNode;
-}
-
-
-nodePointer dequeue(queueType *q)
-{
+    queueNode *new_node=(queueNode *)malloc(sizeof(queueNode));
+    new_node->data=data;
+    new_node->link=NULL;
+    
     if(is_queue_empty(q))
     {
-        error("queue is empty, cannot delete element");
+        q->front=new_node;
+        q->rear=new_node;
     }
-    return q->queue[++(q->front)];
-}
-
-nodePointer create_node(char data,nodePointer left,nodePointer right)
-{
-    nodePointer new_node=(nodePointer)malloc(sizeof(node));
-    new_node->data=data;
-    new_node->leftChild=left;
-    new_node->rightChild=right;
-    new_node->visited=0;
-    
-    return new_node;
-}
-
-nodePointer createBinTree(void)
-{
-    stackType s;
-    init_stack(&s);
-    
-    char data;
-    nodePointer op1,op2;
-    
-    FILE *fa;
-    fa=fopen("input.txt", "r");
-    
-    while(fscanf(fa, "%c",&data)!=EOF)
+    else
     {
-        printf("%c",data);
-        if(data=='+'||data=='-'||data=='*'||data=='/'||data=='%')
-        {
-            op2=pop(&s);
-            op1=pop(&s);
-            push(&s, create_node(data, op1, op2));
-        }
-        else
-        {
-            push(&s, create_node(data, NULL, NULL));
-        }
+        q->rear->link=new_node;
+        q->rear=new_node;
     }
-    
-    return pop(&s);
 }
 
-void inorder_iteration(nodePointer root)
+treeNode *dequeue(queueType *q)
+{
+    queueNode *removed=q->front;
+    treeNode *data=removed->data;
+    
+    q->front=removed->link;
+    
+    if(q->front==NULL)
+    {
+        q->rear=NULL;
+    }
+    
+    free(removed);
+    
+    return data;
+}
+
+void preorder_iter(treeNode *root)
 {
     stackType s;
     init_stack(&s);
@@ -157,10 +144,35 @@ void inorder_iteration(nodePointer root)
     {
         while(root!=NULL)
         {
+            printf("%c",root->data);
             push(&s, root);
             root=root->leftChild;
         }
+        root=pop(&s);
         
+        if(root==NULL)
+        {
+            break;
+        }
+        
+        root=root->rightChild;
+    }
+}
+
+
+void inorder_iter(treeNode *root)
+{
+    stackType s;
+    init_stack(&s);
+    
+    while(1)
+
+    {
+        while(root!=NULL)
+        {
+            push(&s, root);
+            root=root->leftChild;
+        }
         root=pop(&s);
         
         if(root==NULL)
@@ -169,128 +181,76 @@ void inorder_iteration(nodePointer root)
         }
         
         printf("%c",root->data);
-        root=root->rightChild;
-    }
-}
-
-void preorder_iteration(nodePointer root)
-{
-    stackType s;
-    init_stack(&s);
-    
-    while(1)
-    {
-        while(root!=NULL)
-        {
-            printf("%c",root->data);
-            push(&s, root);
-            root=root->leftChild;
-        }
-        
-        root=pop(&s);
-        
-        if(root==NULL)
-        {
-            break;
-        }
-        
         
         root=root->rightChild;
     }
 }
-
-void levelorder_iteration(nodePointer root)
+void level_order(treeNode *root)
 {
     queueType q;
-    nodePointer temp;
-    
     init_queue(&q);
+    
     enqueue(&q, root);
+    treeNode *temp;
     
     while(!is_queue_empty(&q))
     {
         temp=dequeue(&q);
+        
         printf("%c",temp->data);
         
-        if(temp->leftChild)
+        if(temp->leftChild!=NULL)
         {
             enqueue(&q, temp->leftChild);
+            
         }
-        if(temp->rightChild)
+        
+        if(temp->rightChild!=NULL)
         {
             enqueue(&q, temp->rightChild);
         }
     }
 }
 
-void postorder_iterative(nodePointer root)
+int main()
 {
+    FILE *fa;
+    fa=fopen("input.txt","r");
+    
+    char data;
     stackType s;
+    treeNode *op1,*op2;
     init_stack(&s);
     
-    while(1)
+    while(fscanf(fa, "%c",&data)!=EOF)
     {
-        while(root!=NULL)
-        {
-            push(&s, root);
-            root=root->leftChild;
-        }
-        root=pop(&s);
+        printf("%c",data);
         
-        if(root==NULL)
+        if(data=='+'||data=='-'||data=='*'||data=='/'||data=='%')
         {
-            break;
-        }
-        
-        if(root->rightChild!=NULL)
-        {
-            if(root->rightChild->visited==0)
-            {
-                push(&s, root);
-                root=root->rightChild;
-            }
-            else
-            {
-                root->visited=1;
-                printf("%c",root->data);
-                root=NULL;
-            }
+            op2=pop(&s);
+            op1=pop(&s);
+            
+            push(&s, create_node(data, op1, op2));
         }
         else
         {
-            root->visited=1;
-            printf("%c",root->data);
-            root=root->rightChild;
+            push(&s, create_node(data, NULL, NULL));
         }
     }
     
+    root=pop(&s);
     
-}
-int main()
-{
-    printf("the length of input string should be less than 80\n");
-    printf("input string <postfix expression> : ");
-    root=createBinTree();
+    printf("\n\niterative inorder traversal \n");
+    inorder_iter(root);
     
-    printf("\ncreating its binary tree\n\n");
+    printf("\n\niterative preorder traversal \n");
+    preorder_iter(root);
     
-    printf("iterative inorder traversal   : ");
-    inorder_iteration(root);
+    printf("\n\nlevel order\n");
+    level_order(root);
     printf("\n");
-    
-    printf("iterative preorder traversal  : ");
-    preorder_iteration(root);
-    printf("\n");
-    
-    printf("level order traversal         : ");
-    levelorder_iteration(root);
-    printf("\n");
-    
-    printf("iterative postorder traversal : ");
-    postorder_iterative(root);
-    printf("\n");
-    
-    
     
     return 0;
+    
 }
