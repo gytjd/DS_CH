@@ -1,28 +1,17 @@
-//
-//  2.c
-//  KNU C
-//
-//  Created by hwang hyosung on 2022/04/26.
-//
-
-#include "2.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#define MAX_SIZE 100
-
-typedef struct node* treePointer;
-typedef struct node {
+#define MAX_QUEUE_SIZE 20
+typedef struct treeNode {
     char data;
-    treePointer leftChild;
-    treePointer rightChild;
-}node;
+    struct treeNode *leftChild;
+    struct treeNode *rightChild;
+}treeNode;
 
-treePointer root=NULL;
-treePointer queue[MAX_SIZE];
-int front;
-int rear;
+treeNode *root=NULL;
+treeNode *queue[MAX_QUEUE_SIZE];
+int front=-1;
+int rear=-1;
 
 void error(char *message)
 {
@@ -32,55 +21,16 @@ void error(char *message)
 
 void init_queue(void)
 {
-    front=-1;
-    rear=-1;
-}
-
-treePointer is_queue_empty(void)
-{
-    if(front==rear)
+    int i;
+    for(i=0;i<MAX_QUEUE_SIZE;i++)
     {
-        return NULL;
-    }
-    return NULL;
-}
-
-int is_queue_full(void)
-{
-    return rear==MAX_SIZE-1;
-}
-
-void enqueue(treePointer data)
-{
-    if(is_queue_full())
-    {
-        error("큐가 가득차있습니다.");
-    }
-    else
-    {
-        queue[++rear]=data;
+        queue[i]=NULL;
     }
 }
 
-treePointer dequeue(void)
+treeNode *create_node(char data)
 {
-    if(is_queue_empty())
-    {
-        error("큐가 비어있습니다.");
-    }
-    
-    return queue[++front];
-}
-
-treePointer get_front(void)
-{
-    int temp=front+1;
-    return queue[temp];
-}
-
-treePointer createNode(char data)
-{
-    treePointer new_node=(treePointer)malloc(sizeof(node));
+    treeNode *new_node=(treeNode *)malloc(sizeof(treeNode));
     new_node->data=data;
     new_node->leftChild=NULL;
     new_node->rightChild=NULL;
@@ -88,50 +38,43 @@ treePointer createNode(char data)
     return new_node;
 }
 
-void insert(treePointer *pRoot,treePointer pNode)
+void enqueue(treeNode *data)
 {
-    treePointer temp;
-    if((*pRoot)==NULL)
-    {
-        (*pRoot)=pNode;
-    }
-    else
-    {
-        temp=get_front();
-        
-        
-        if(temp->leftChild==NULL)
-        {
-            temp->leftChild=pNode;
-        }
-        else if(temp->rightChild==NULL)
-        {
-            temp->rightChild=pNode;
-            dequeue();
-        }
-    }
-    enqueue(pNode);
-    
+    queue[++rear]=data;
 }
 
-treePointer createCompBinTree(FILE *fp)
+treeNode *dequeue(void)
 {
-    fp=fopen("input.txt", "r");
-    char data;
-    
-    init_queue();
-    
-    while(fscanf(fp, "%c",&data)!=EOF)
+    return queue[++front];
+}
+
+treeNode *insert(treeNode *root)
+{
+    int i;
+    for(i=0;i<9;i++)
     {
-        insert(&root, createNode(data));
+        if(root==NULL)
+        {
+            root=dequeue();
+        }
+        else
+        {
+            if(queue[front]->leftChild==NULL)
+            {
+                queue[front]->leftChild=queue[i];
+            }
+            else if(queue[front]->rightChild==NULL)
+            {
+                queue[front]->rightChild=queue[i];
+                dequeue();
+            }
+        }
     }
-    
-    
     
     return root;
 }
 
-void inorder_my(treePointer root)
+void inorder_my(treeNode *root)
 {
     if(root)
     {
@@ -141,43 +84,23 @@ void inorder_my(treePointer root)
     }
 }
 
-void preorder_my(treePointer root)
-{
-    if(root)
-    {
-        printf("%c ",root->data);
-        preorder_my(root->leftChild);
-        preorder_my(root->rightChild);
-    }
-}
-
-void postorder_my(treePointer root)
-{
-    if(root)
-    {
-        postorder_my(root->leftChild);
-        postorder_my(root->rightChild);
-        printf("%c ",root->data);
-    }
-}
 int main()
 {
-    FILE *fp;
-    root=createCompBinTree(fp);
+    char data;
     
-    printf("creating a complete binary tree\n");
+    FILE *fa;
+    fa=fopen("input.txt","r");
     
-    printf("\nthree binary tree traversals\n");
-    printf("inorder traversal   : ");
+    init_queue();
+    
+    while(fscanf(fa,"%c",&data)!=EOF)
+    {
+        enqueue(create_node(data));
+    }
+    
+    root=insert(root);
     inorder_my(root);
-    printf("\n");
-    printf("preorder traversal  : ");
-    preorder_my(root);
-    printf("\n");
-    printf("postorder traversal : ");
-    postorder_my(root);
-    printf("\n");
+    
     
     return 0;
 }
-

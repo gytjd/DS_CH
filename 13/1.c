@@ -1,119 +1,44 @@
-//
-//  1.c
-//  KNU C
-//
-//  Created by hwang hyosung on 2022/04/26.
-//
-
-#include "1.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 
-typedef struct node *treePointer;
-typedef struct node {
+typedef struct treeNode {
     char data;
-    treePointer leftChild;
-    treePointer rightChild;
-}node;
+    struct treeNode *leftChild;
+    struct treeNode *rightChild;
+}treeNode;
 
-treePointer root=NULL;
+treeNode *root=NULL;
 
-treePointer createNode(char data)
+treeNode *createNode(char data,treeNode *left,treeNode *right)
 {
-    treePointer new_node=(treePointer)malloc(sizeof(node));
+    treeNode *new_node=(treeNode *)malloc(sizeof(treeNode));
     new_node->data=data;
-    new_node->leftChild=NULL;
-    new_node->rightChild=NULL;
+    new_node->leftChild=left;
+    new_node->rightChild=right;
     
     return new_node;
 }
 
-treePointer createBintree(treePointer root,char data)
-{
-    if(root==NULL)
-    {
-        return createNode(data);
-    }
-    
-    if(root->leftChild==NULL)
-    {
-        root->leftChild=createBintree(root->leftChild, data);
-    }
-    else if(root->rightChild==NULL)
-    {
-        root->rightChild=createBintree(root->rightChild, data);
-    }
-    else
-    {
-        if(root->leftChild->leftChild==NULL || root->leftChild->rightChild==NULL)
-        {
-            root->leftChild=createBintree(root->leftChild, data);
-        }
-        else if(root->leftChild->leftChild!=NULL && root->leftChild->rightChild!=NULL && root->rightChild->leftChild!=NULL && root->rightChild->rightChild!=NULL)
-        {
-            root->leftChild=createBintree(root->leftChild, data);
-        }
-        else
-        {
-            root->rightChild=createBintree(root->rightChild, data);
-        }
-    }
-    
-    return root;
-}
-
-void inorder(treePointer root)
+void inorder_my(treeNode *root)
 {
     if(root)
     {
-        inorder(root->leftChild);
+        inorder_my(root->leftChild);
         printf("%c ",root->data);
-        inorder(root->rightChild);
-    }
-}
-
-void preorder_my(treePointer root)
-{
-    if(root)
-    {
-        printf("%c ",root->data);
-        preorder_my(root->leftChild);
-        
-        preorder_my(root->rightChild);
-    }
-}
-
-void postorder_my(treePointer root)
-{
-    if(root)
-    {
-        postorder_my(root->leftChild);
-        postorder_my(root->rightChild);
-        printf("%c ",root->data);
+        inorder_my(root->rightChild);
     }
 }
 int main()
 {
-    int i;
-    for(i=0;i<7;i++)
-    {
-        root=createBintree(root, 'A'+i);
-    }
+    treeNode *D=createNode('D',NULL,NULL);
+    treeNode *E=createNode('E',NULL,NULL);
+    treeNode *B=createNode('B',D,E);
+    treeNode *C=createNode('C',NULL,NULL);
+    treeNode *A=createNode('A',B,C);
     
-    printf("creating a binary tree\n");
+    root=A;
     
-    printf("\nthree binary tree traversals\n");
-    printf("inorder traversal   : ");
-    inorder(root);
-    printf("\n");
+    inorder_my(root);
     
-    printf("preorder traversal  : ");
-    preorder_my(root);
-    printf("\n");
-    
-    printf("postorder traversal : ");
-    postorder_my(root);
-    printf("\n");
     return 0;
 }
